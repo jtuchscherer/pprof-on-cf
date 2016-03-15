@@ -1,1 +1,1 @@
-web: sleep 10 && ./sample-go
+web: sleep 2 && ./pprof-on-cf
