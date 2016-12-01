@@ -1,6 +1,7 @@
 {
-	"ImportPath": "github.com/jtuchscherer/sample-go",
-	"GoVersion": "go1.6",
+	"ImportPath": "github.com/jtuchscherer/pprof-on-cf",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v71",
 	"Deps": [
 		{
 			"ImportPath": "github.com/gorilla/context",

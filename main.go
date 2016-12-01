@@ -35,6 +35,8 @@ func main() {
 	}
 	r := mux.NewRouter()
 	r.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Header %s", r.Header.Get("X-Vcap-Request-Id"))
+		fmt.Fprintf(w, "Header %s", r.Header.Get("X-Vcap-Request-Id"))
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 	})
 
