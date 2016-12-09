@@ -3,4 +3,8 @@ applications:
   instances: 1
   memory: 256M
   disk_quota: 1024M
+  buildpack: go_buildpack
   stack: cflinuxfs2
+  env:
+    USERNAME: "user"
+    PASSWORD: "pass"

@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"net/http/httputil"
 	"net/http/pprof"
 
 	"github.com/gorilla/mux"
@@ -24,7 +25,7 @@ func (u *userProvider) credsMatch(username, password string) bool {
 }
 
 func main() {
-	userProvider := userProvider{
+	up := userProvider{
 		username: os.Getenv("USERNAME"),
 		password: os.Getenv("PASSWORD"),
 	}
@@ -34,21 +35,26 @@ func main() {
 		port = "8080"
 	}
 	r := mux.NewRouter()
-	r.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Header %s", r.Header.Get("X-Vcap-Request-Id"))
-		fmt.Fprintf(w, "Header %s", r.Header.Get("X-Vcap-Request-Id"))
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	r.HandleFunc("/dumpReq", func(w http.ResponseWriter, r *http.Request) {
+		reqBytes, err := httputil.DumpRequest(r, false)
+		if err != nil {
+			log.Printf("Not able to print request: %q", err.Error)
+			fmt.Fprintf(w, "Not able to print request: %q", err.Error)
+		}
+		log.Printf("X-Vcap-Request-Id Header %s", r.Header.Get("X-Vcap-Request-Id"))
+		fmt.Fprintf(w, "Whole Request %s", reqBytes)
+		fmt.Fprintf(w, "Hello, %q\n", html.EscapeString(r.URL.Path))
 	})
 
-	r.HandleFunc("/debug/pprof/", authenticate(http.HandlerFunc(pprof.Index), userProvider))
-	r.HandleFunc("/debug/pprof/cmdline", authenticate(http.HandlerFunc(pprof.Cmdline), userProvider))
-	r.HandleFunc("/debug/pprof/profile", authenticate(http.HandlerFunc(pprof.Profile), userProvider))
-	r.HandleFunc("/debug/pprof/symbol", authenticate(http.HandlerFunc(pprof.Symbol), userProvider))
+	r.HandleFunc("/debug/pprof/", authenticate(http.HandlerFunc(pprof.Index), up))
+	r.HandleFunc("/debug/pprof/cmdline", authenticate(http.HandlerFunc(pprof.Cmdline), up))
+	r.HandleFunc("/debug/pprof/profile", authenticate(http.HandlerFunc(pprof.Profile), up))
+	r.HandleFunc("/debug/pprof/symbol", authenticate(http.HandlerFunc(pprof.Symbol), up))
 
-	r.HandleFunc("/debug/pprof/goroutine", authenticate(pprof.Handler("goroutine").ServeHTTP, userProvider))
-	r.HandleFunc("/debug/pprof/heap", authenticate(pprof.Handler("heap").ServeHTTP, userProvider))
-	r.HandleFunc("/debug/pprof/threadcreate", authenticate(pprof.Handler("threadcreate").ServeHTTP, userProvider))
-	r.HandleFunc("/debug/pprof/block", authenticate(pprof.Handler("block").ServeHTTP, userProvider))
+	r.HandleFunc("/debug/pprof/goroutine", authenticate(pprof.Handler("goroutine").ServeHTTP, up))
+	r.HandleFunc("/debug/pprof/heap", authenticate(pprof.Handler("heap").ServeHTTP, up))
+	r.HandleFunc("/debug/pprof/threadcreate", authenticate(pprof.Handler("threadcreate").ServeHTTP, up))
+	r.HandleFunc("/debug/pprof/block", authenticate(pprof.Handler("block").ServeHTTP, up))
 
 	log.Printf("About to listen to port %s", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
