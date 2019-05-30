@@ -35,11 +35,18 @@ func main() {
 		port = "8080"
 	}
 	r := mux.NewRouter()
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "<html><body>")
+		fmt.Fprint(w, "<h1>Hello World</h1><br/>")
+		fmt.Fprint(w, "Go to <a href=\"/dumpReq\">request analysis</a><br/>")
+		fmt.Fprint(w, "Go to <a href=\"/debug/pprof/\">pprof endpoints</a>")
+		fmt.Fprint(w, "</body></head>")
+	})
 	r.HandleFunc("/dumpReq", func(w http.ResponseWriter, r *http.Request) {
 		reqBytes, err := httputil.DumpRequest(r, false)
 		if err != nil {
-			log.Printf("Not able to print request: %q", err.Error)
-			fmt.Fprintf(w, "Not able to print request: %q", err.Error)
+			log.Printf("Not able to print request: %q", err.Error())
+			fmt.Fprintf(w, "Not able to print request: %q", err.Error())
 		}
 		log.Printf("X-Vcap-Request-Id Header %s", r.Header.Get("X-Vcap-Request-Id"))
 		fmt.Fprintf(w, "Whole Request %s", reqBytes)
